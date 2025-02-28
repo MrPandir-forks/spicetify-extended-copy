@@ -70,6 +70,13 @@ async function getData(
     return items;
 }
 
+async function getLinks(uris: string[]): Promise<string[]> {
+    return uris.map((uri) => {
+        const id = getId(Spicetify.URI.fromString(uri));
+        return `https://open.spotify.com/track/${id}`;
+    });
+}
+
 async function copy(text: string | any): Promise<void> {
     Spicetify.showNotification(i18next.t('copied'));
     await clipboardApi.copy(text);
@@ -96,6 +103,7 @@ async function main(): Promise<void> {
                     copyEpisode: 'Copy episode',
                     name: 'Name',
                     data: 'Data',
+                    links: 'Links',
                     noElements: 'No element selected.',
                     copied: 'Copied to clipboard',
                 },
@@ -111,6 +119,7 @@ async function main(): Promise<void> {
                     copyEpisode: "Copier l'épisode",
                     name: 'Nom',
                     data: 'Données',
+                    links: 'Liens',
                     noElements: 'Aucun élément sélectionné.',
                     copied: 'Copié dans le presse-papier',
                 },
@@ -153,6 +162,15 @@ async function main(): Promise<void> {
         () => true,
     );
 
+    const copyLinksItem = new Spicetify.ContextMenu.Item(
+        i18next.t('links'),
+        async (uris) => {
+            const links = await getLinks(uris);
+            await copy(links.join(' '));
+        },
+        () => true,
+    );
+
     const icon = Spicetify.ReactDOMServer.renderToString(
         <Clipboard size={16} color="var(--text-subdued)" strokeWidth={1} />,
     );
@@ -163,7 +181,13 @@ async function main(): Promise<void> {
     ): void => {
         new Spicetify.ContextMenu.SubMenu(
             i18next.t(labelKey),
-            [copyNameItem, copyIdItem, copyUriItem, copyDataItem],
+            [
+                copyNameItem,
+                copyIdItem,
+                copyUriItem,
+                copyDataItem,
+                copyLinksItem,
+            ],
             shouldAdd,
             false,
             icon,
